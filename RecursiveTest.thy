@@ -90,7 +90,7 @@ proof -
   (* \<alpha>-convert to remove temporary names *)
   also have "... \<approx> bnd n . m<y, z><n> \<cdot> nmult (n # xs) a" by qstep
 
-  finally show ?thesis by simp
+  finally show ?thesis .
 qed
 
 lemma nmult_unit1[simp]:
@@ -113,7 +113,7 @@ proof -
   also have "... \<approx> bnd n1 . id<a><n1> \<cdot> nmult xs n1" by qstep
   also have "... \<approx> (a \<leftrightarrow> n1) \<bullet> nmult xs n1" by qstep
   also have "... \<approx> nmult xs a" by qstep
-  finally show ?thesis by simp
+  finally show ?thesis .
 qed
 
 theorem nmult_assoc:
@@ -155,10 +155,10 @@ case (Cons z zs n a)
   also have "... \<approx> bnd n . m<z,n><a> \<cdot> nmult (zs @ ys) n" by qstep
 
   (* re-roll nmult *)
-  also have "... \<approx> nmult (z # zs @ ys) a"
+  also have "... \<approx> nmult ((z # zs) @ ys) a"
   using nmult_step[of n] by qstep
 
-  finally show ?case by simp
+  finally show ?case .
 qed
 
 end
