@@ -89,10 +89,22 @@ qed
 
 theorems supp_args = supports_def permute_fun_def fresh_def[symmetric] swap_fresh_fresh finite_supp
 
+text {* a tag for holding local freshness assumptions. qstep uses this by default *}
+
+ML {*
+(* TODO: add some automatic simplification when rules are tagged 'fr', e.g. to add
+ * symmetric freshness conditions and simplify expressions involving lists, pairs, etc. *)
+structure FreshRules = Named_Thms(
+  val name = @{binding fr}
+  val description = "Local freshness assumptions"
+)
+*}
+
+setup {* FreshRules.setup *}
+
 text {* A fairly crude first approximation of a tactic that solves most single proof steps *}
 
 ML {*
-signature S = SIMPLIFIER
   (* qstep_tac -- a tactic for solving fairly trivial tensor equations *)
   fun qstep_tac ctxt =
     let
@@ -100,7 +112,8 @@ signature S = SIMPLIFIER
         ctxt
          |> Simplifier.map_simpset (
               fold Splitter.add_split @{thms prod.splits} #>
-              fold Simplifier.add_simp @{thms split_def tens_subs newfresh})
+              fold Simplifier.add_simp @{thms split_def tens_subs newfresh} #>
+              fold Simplifier.add_simp (FreshRules.get ctxt))
       (* blast is used to solve equations up to AC. temporarily tag these rules as intro! *)
       val blast_ctxt = Classical.addSIs (gen_ctxt, @{thms tens_comm tens_assoc})
     in (
@@ -125,6 +138,8 @@ method_setup qstep = {*
     (*Isar method boilerplate*)
     (fn _ => fn ctxt => SIMPLE_METHOD (CHANGED (qstep_tac ctxt)))  
 *}
+
+text {* tests *}
 
 notepad
 begin

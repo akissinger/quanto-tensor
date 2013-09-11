@@ -94,18 +94,17 @@ proof -
 qed
 
 lemma nmult_unit1[simp]:
-  assumes "atom a \<sharp> xs"
-  assumes "atom n \<sharp> (a,xs)"
+  assumes [fr]:"atom a \<sharp> xs"
+  assumes [fr]:"atom n \<sharp> (a,xs)"
   shows "bnd n . u<n> \<cdot> nmult (n # xs) a \<approx> nmult xs a"
 proof -
-  note fr = assms
-  obtain n1::name where "atom n1 \<sharp> (xs,a,n)" by (rule obtain_fresh) note fr = this fr
-  have "atom n \<sharp> n1" by (simp only:fresh_symm fr) note fr = this fr
-  have "atom a \<sharp> n1" by (simp only:fresh_symm fr) note fr = this fr
-  note [simp] = fr[simplified]
+  note [fr] = assms
+  obtain n1::name where [fr]: "atom n1 \<sharp> (xs,a,n)" by (rule obtain_fresh)
+  have [fr]:"atom n \<sharp> n1" by (simp only:fresh_symm fr)
+  have [fr]:"atom a \<sharp> n1" by (simp only:fresh_symm fr)
 
   have "bnd n . u<n> \<cdot> nmult (n # xs) a \<approx> bnd n . u<n> \<cdot> (bnd n1 . m<n, n1><a> \<cdot> nmult xs n1)"
-  using nmult_step[of n1] by auto
+  using nmult_step[of n1] by qstep
 
   also have "... \<approx> bnd n . bnd n1 . u<n> \<cdot> m<n, n1><a> \<cdot> nmult xs n1" by qstep
   also have "... \<approx> bnd n1 . bnd n . u<n> \<cdot> m<n, n1><a> \<cdot> nmult xs n1" by qstep
@@ -124,12 +123,11 @@ case Nil
   then show ?case by simp (* uses lemma nmult_unit1 *)
 next
 case (Cons z zs n a)
-  note ih = this
-  note fr = assms
-  obtain n1::name where "atom n1 \<sharp> (z,zs,ys,a,n)" by (rule obtain_fresh) note fr = this fr
-  have "atom n \<sharp> (n1,z,zs)" using fr ih by (simp only:fresh_symm fr newfresh, blast) note fr = this fr
-  have "atom a \<sharp> n1" by (simp only:fresh_symm fr) note fr = this fr
-  note [simp] = fr ih
+  note ih[simp] = this
+  note [fr] = assms
+  obtain n1::name where [fr]:"atom n1 \<sharp> (z,zs,ys,a,n)" by (rule obtain_fresh)
+  have [fr]:"atom n \<sharp> (n1,z,zs)" using ih by (simp only:fresh_symm fr newfresh, blast)
+  have [fr]:"atom a \<sharp> n1" by (simp only:fresh_symm fr)
 
   (* unroll nmult *)
   have "bnd n . nmult (z # zs) n \<cdot> nmult (n # ys) a \<approx>
