@@ -49,17 +49,42 @@ lemma nmult_assoc1:
   assumes "atom n \<sharp> (y, z, xs, a)"
   shows "bnd n . m<y,n><a> \<cdot> nmult (z # xs) n \<approx> bnd n . m<y,z><n> \<cdot> nmult (n # xs) a"
 proof -
-  def [simp]: ctx \<equiv> "(y,z,xs,a)"
+  let ?free = "(y,z,xs,a)"
   (* define some temporary fresh names for the calculation *)
-  note fr = assms
-  obtain n1::name where "atom n1 \<sharp> ctx" by (rule obtain_fresh) note fr = this fr
-  obtain n2::name where "atom n2 \<sharp> (ctx,n1)" by (rule obtain_fresh) note fr = this fr
-  have "atom n1 \<sharp> n2" by (simp only:fr fresh_symm) note fr = this fr
-  note [simp] = fr[simplified]
+  note [fr] = assms
+  obtain n1::name where [fr]:"atom n1 \<sharp> ?free" by (rule obtain_fresh) let ?free = "(?free,n1)"
+  obtain n2::name where [fr]:"atom n2 \<sharp> ?free" by (rule obtain_fresh) let ?free = "(?free,n2)"
+  have [fr]:"atom n1 \<sharp> n2" by (simp only:fr fresh_symm)
 
-  (* all steps solvable with
-     using tens_ac by (auto?, blast?, ((rule tens_subs, auto?)+)?)
-   *)
+ML_prf {*
+(* experimenting with pre-simplifying fresh rules in ML, and pulling names *)
+val t = nth (FreshRules.get @{context}) 1;
+
+val ctx = @{context} |> Simplifier.map_simpset (
+  fold Simplifier.add_simp @{thms newfresh}
+);
+
+fun conj_to_list (@{const "HOL.conj"} $ s $ t) = s :: conj_to_list t
+  | conj_to_list t = [t];
+
+fun prop t = @{const "HOL.Trueprop"} $ t
+
+fun thm_conj_to_list ctx thm =
+  let
+    val ctx1 = ctx |> Simplifier.map_simpset (fold Simplifier.add_simp (FreshRules.get @{context}))
+  in
+  case (prop_of thm) of (@{const "HOL.Trueprop"} $ t) =>
+    map (fn t => Goal.prove ctx [] [] (prop t) (K (auto_tac ctx1))) (conj_to_list t)
+    | _ => []
+  end
+
+val smp = Simplifier.simplify (simpset_of ctx) t;
+val list = thm_conj_to_list ctx smp;
+
+val smp' = Seq.list_of(rtac @{thm conjI} 1 smp);
+val names = map_filter name_from_fresh_thm (FreshRules.get @{context});
+val cnames = map (cterm_of @{theory}) names;
+*}
 
   (* \<alpha>-convert (not technically necessary, mainly here for demonstration) *)
   have "bnd n . m<y,n><a> \<cdot> nmult (z # xs) n \<approx> bnd n1 . m<y, n1><a> \<cdot> nmult (z # xs) n1"
@@ -67,10 +92,10 @@ proof -
   
   (* unfold nmult *)
   also have "... \<approx> bnd n1 . bnd n2 . m<y, n1><a> \<cdot> m<z, n2><n1> \<cdot> nmult xs n2"
-  using nmult_step[of n2] by qstep
+  by (qstep simp:nmult_step[of n2])
 
   (* tensor axioms *)
-  also have "... \<approx> bnd n1 . bnd n2 . nmult xs n2 \<cdot> m<y, n1><a> \<cdot> m<z, n2><n1>" using tens_ac by qstep
+  also have "... \<approx> bnd n1 . bnd n2 . nmult xs n2 \<cdot> m<y, n1><a> \<cdot> m<z, n2><n1>" by qstep
   also have "... \<approx> bnd n2 . bnd n1 . nmult xs n2 \<cdot> m<y, n1><a> \<cdot> m<z, n2><n1>" by qstep
   also have "... \<approx> bnd n2 . nmult xs n2 \<cdot> (bnd n1 . m<y, n1><a> \<cdot> m<z, n2><n1>)" by qstep
 
@@ -80,12 +105,12 @@ proof -
   (* tensor axioms *)
   also have "... \<approx> bnd n2 . bnd n1 . nmult xs n2 \<cdot> m<n1,n2><a> \<cdot> m<y, z><n1>" by qstep
   also have "... \<approx> bnd n1 . bnd n2 . nmult xs n2 \<cdot> m<n1,n2><a> \<cdot> m<y, z><n1>" by qstep
-  also have "... \<approx> bnd n1 . bnd n2 . m<y, z><n1> \<cdot> m<n1,n2><a> \<cdot> nmult xs n2" using tens_ac by qstep
+  also have "... \<approx> bnd n1 . bnd n2 . m<y, z><n1> \<cdot> m<n1,n2><a> \<cdot> nmult xs n2" by qstep
   also have "... \<approx> bnd n1 . m<y, z><n1> \<cdot> (bnd n2 . m<n1,n2><a> \<cdot> nmult xs n2)" by qstep
 
   (* re-fold nmult *)
   also have "... \<approx> bnd n1 . m<y, z><n1> \<cdot> nmult (n1 # xs) a"
-  using nmult_step[of n2] by qstep
+  by (qstep simp:nmult_step[of n2])
 
   (* \<alpha>-convert to remove temporary names *)
   also have "... \<approx> bnd n . m<y, z><n> \<cdot> nmult (n # xs) a" by qstep

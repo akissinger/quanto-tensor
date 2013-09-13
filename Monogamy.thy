@@ -17,15 +17,13 @@ where
 | "usupp (id<a><b>) = {atom b}"
 | "usupp (m<a,b><c>) = {atom c}"
 | "usupp (u<a>) = {atom a}"
-using [[simproc del: alpha_lst]]
-apply(simp add: eqvt_def usupp_graph_aux_def)
-apply(erule usupp_graph.induct)
-apply(auto)[6]
-apply(rule_tac y="x" in monoid.exhaust)
-apply(simp_all)
-apply(auto)[3]
-apply(erule_tac c="()" in Abs_lst1_fcb2)
-apply(simp_all add: fresh_minus_atom_set fresh_star_def fresh_Unit Diff_eqvt eqvt_at_def)
+apply(simp_all add:eqvt_def usupp_graph_aux_def)
+apply(erule usupp_graph.induct,auto)[]
+apply(metis monoid.exhaust)
+apply(simp only:Abs1_eq_iff_all(3)[symmetric])
+apply(erule Abs_lst1_fcb2[where c="()"],
+      auto simp: fresh_star_def eqvt_at_def fresh_Unit)[]
+apply(simp add:Diff_eqvt fresh_minus_atom_set)
 done
 
 termination (eqvt) 
@@ -39,16 +37,16 @@ where
 | "dsupp (id<a><b>) = {atom a}"
 | "dsupp (m<a,b><c>) = {atom a, atom b}"
 | "dsupp (u<a>) = {}"
-using [[simproc del: alpha_lst]]
-apply(simp add: eqvt_def dsupp_graph_aux_def)
-apply(erule dsupp_graph.induct)
-apply(auto)[6]
-apply(rule_tac y="x" in monoid.exhaust)
-apply(simp_all)
-apply(auto)[3]
-apply(erule_tac c="()" in Abs_lst1_fcb2)
-apply(auto simp add: fresh_minus_atom_set fresh_star_def fresh_Unit Diff_eqvt eqvt_at_def)
+(*using [[simproc del: alpha_lst]]*)
+apply(simp_all add:eqvt_def dsupp_graph_aux_def)
+apply(erule dsupp_graph.induct,auto)[]
+apply(metis monoid.exhaust)
+apply(simp only:Abs1_eq_iff_all(3)[symmetric])
+apply(erule Abs_lst1_fcb2[where c="()"],
+      auto simp: fresh_star_def eqvt_at_def fresh_Unit)[]
+apply(simp add:Diff_eqvt fresh_minus_atom_set)
 done
+
 termination (eqvt) 
   by lexicographic_order
 
