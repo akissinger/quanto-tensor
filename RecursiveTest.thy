@@ -56,36 +56,6 @@ proof -
   obtain n2::name where [fr]:"atom n2 \<sharp> ?free" by (rule obtain_fresh) let ?free = "(?free,n2)"
   have [fr]:"atom n1 \<sharp> n2" by (simp only:fr fresh_symm)
 
-ML_prf {*
-(* experimenting with pre-simplifying fresh rules in ML, and pulling names *)
-val t = nth (FreshRules.get @{context}) 1;
-
-val ctx = @{context} |> Simplifier.map_simpset (
-  fold Simplifier.add_simp @{thms newfresh}
-);
-
-fun conj_to_list (@{const "HOL.conj"} $ s $ t) = s :: conj_to_list t
-  | conj_to_list t = [t];
-
-fun prop t = @{const "HOL.Trueprop"} $ t
-
-fun thm_conj_to_list ctx thm =
-  let
-    val ctx1 = ctx |> Simplifier.map_simpset (fold Simplifier.add_simp (FreshRules.get @{context}))
-  in
-  case (prop_of thm) of (@{const "HOL.Trueprop"} $ t) =>
-    map (fn t => Goal.prove ctx [] [] (prop t) (K (auto_tac ctx1))) (conj_to_list t)
-    | _ => []
-  end
-
-val smp = Simplifier.simplify (simpset_of ctx) t;
-val list = thm_conj_to_list ctx smp;
-
-val smp' = Seq.list_of(rtac @{thm conjI} 1 smp);
-val names = map_filter name_from_fresh_thm (FreshRules.get @{context});
-val cnames = map (cterm_of @{theory}) names;
-*}
-
   (* \<alpha>-convert (not technically necessary, mainly here for demonstration) *)
   have "bnd n . m<y,n><a> \<cdot> nmult (z # xs) n \<approx> bnd n1 . m<y, n1><a> \<cdot> nmult (z # xs) n1"
   by qstep
@@ -134,8 +104,8 @@ proof -
   also have "... \<approx> bnd n . bnd n1 . u<n> \<cdot> m<n, n1><a> \<cdot> nmult xs n1" by qstep
   also have "... \<approx> bnd n1 . bnd n . u<n> \<cdot> m<n, n1><a> \<cdot> nmult xs n1" by qstep
   also have "... \<approx> bnd n1 . (bnd n . u<n> \<cdot> m<n, n1><a>) \<cdot> nmult xs n1" by qstep
-  also have "... \<approx> bnd n1 . id<a><n1> \<cdot> nmult xs n1" by qstep
-  also have "... \<approx> (a \<leftrightarrow> n1) \<bullet> nmult xs n1" by qstep
+  also have "... \<approx> bnd n1 .  nmult xs n1 \<cdot> id<n1><a>" by qstep
+  also have "... \<approx> (n1 \<leftrightarrow> a) \<bullet> nmult xs n1" by qstep
   also have "... \<approx> nmult xs a" by qstep
   finally show ?thesis .
 qed

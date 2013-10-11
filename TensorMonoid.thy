@@ -37,7 +37,7 @@ where
     "bnd x . m<x,c><d> \<cdot> m<a,b><x> \<approx>
      bnd x. m<a,x><d> \<cdot> m<b,c><x>"
 | mult_unit[intro]:
-    "bnd x . u<x> \<cdot> m<x, b><a> \<approx> id<a><b>"
+    "bnd x . u<x> \<cdot> m<x, a><b> \<approx> id<a><b>"
 
 find_theorems "?\<pi> \<bullet> (?a \<leftrightarrow> ?b) \<bullet> ?sa"
 
