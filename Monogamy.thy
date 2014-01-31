@@ -3,7 +3,7 @@ imports "TensorMonoid"
 begin
 
 text {*
-This file defines well-defined tensor expressions. For an expression to be well-defined, it needs
+This file defines well-formed tensor expressions. For an expression to be well-formed, it needs
 to be
  (a) monogamous - all names occur at most once in the up- and down-support
  (b) closed - all matched pairs of names should be bound

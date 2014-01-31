@@ -2,13 +2,13 @@ theory RecursiveTest
 imports "TensorMonoid"
 begin
 
-primrec nmultf :: "name list \<Rightarrow> name \<Rightarrow> monoid"
+primrec nmult :: "name list \<Rightarrow> name \<Rightarrow> monoid"
 where
-  "nmultf [] a = u<a>"
-| "nmultf (x # xs) a = (FRESH y . bnd y . m<x, y><a> \<cdot> nmultf xs y)"
+  "nmult [] a = u<a>"
+| "nmult (x # xs) a = (FRESH y . bnd y . m<x, y><a> \<cdot> nmult xs y)"
 
-lemma nmultf_eqvt[eqvt]:
-  shows "p \<bullet> (nmultf xs a) = nmultf (p \<bullet> xs) (p \<bullet> a)"
+lemma nmult_eqvt[eqvt]:
+  shows "p \<bullet> (nmult xs a) = nmult (p \<bullet> xs) (p \<bullet> a)"
 proof(induct xs arbitrary: a p)
   case Nil then show ?case by simp
 next
@@ -20,25 +20,16 @@ next
   done
 qed
 
-(* hide the FRESH-based simps using a def and new lemmas *)
-definition "nmult = nmultf"
-
-lemma nmult_eqvt[eqvt]: "p \<bullet> (nmult xs a) = nmult (p \<bullet> xs) (p \<bullet> a)"
-by(auto simp:nmult_def)
-
-lemma nmult_nil [simp]:
-  shows "nmult [] a = u<a>"
-unfolding nmult_def by auto
+declare nmult.simps(2)[simp del]
 
 lemma nmult_step[intro]:
   assumes "atom n \<sharp> (x,xs,a)"
   shows "nmult (x#xs) a = (bnd n . m<x, n><a> \<cdot> nmult xs n)"
-apply(simp add:nmult_def)
+apply(simp add:nmult.simps(2))
 apply(subst Fresh_apply'[of n])
 apply(subst supports_fresh[of "supp (x, xs, a)"])
 apply(auto simp:assms supp_args)
-apply(metis permute_self permute_swap_cancel swap_eqvt)
-done
+by (metis permute_self permute_swap_cancel swap_eqvt)
 
 lemma nmult_fresh[simp]:
   assumes "at \<sharp> (xs,a)"
@@ -46,14 +37,12 @@ lemma nmult_fresh[simp]:
 by(auto simp:fresh_fun_app assms)
 
 lemma nmult_assoc1:
-  assumes "atom n \<sharp> (y, z, xs, a)"
+  assumes [fr]:"atom n \<sharp> (y, z, xs, a)"
   shows "bnd n . m<y,n><a> \<cdot> nmult (z # xs) n \<approx> bnd n . m<y,z><n> \<cdot> nmult (n # xs) a"
 proof -
-  let ?free = "(y,z,xs,a)"
   (* define some temporary fresh names for the calculation *)
-  note [fr] = assms
-  obtain n1::name where [fr]:"atom n1 \<sharp> ?free" by (rule obtain_fresh) let ?free = "(?free,n1)"
-  obtain n2::name where [fr]:"atom n2 \<sharp> ?free" by (rule obtain_fresh) let ?free = "(?free,n2)"
+  obtain n1::name where [fr]:"atom n1 \<sharp> (y,z,xs,a)" by (rule obtain_fresh)
+  obtain n2::name where [fr]:"atom n2 \<sharp> (y,z,xs,a,n1)" by (rule obtain_fresh)
   have [fr]:"atom n1 \<sharp> n2" by (simp only:fr fresh_symm)
 
   (* \<alpha>-convert (not technically necessary, mainly here for demonstration) *)
