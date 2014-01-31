@@ -1,15 +1,17 @@
 theory TensorMonoid
-imports "../Nominal/Nominal2"
+imports "../nominal2/Nominal/Nominal2"
 begin
 
 atom_decl name
 
 nominal_datatype monoid =
-  COMBINE "monoid" "monoid" (infixr "\<cdot>" 150)
-| BIND "x"::name "t"::monoid binds x in t ("bnd _ . _" [100,100] 100)
-| ID "name" "name" ("id<_><_>" [200,200] 200)
-| MULT "name" "name" "name" ("m<_, _><_>" [200,200,200] 200)
-| UNIT "name" ("u<_>" [200] 200)
+  COMBINE "monoid" "monoid"                   (infixr "\<cdot>" 150)
+| BIND "x"::name "t"::monoid binds x in t     ("bnd _ . _" [100,100] 100)
+| ID "name" "name"                            ("id<_><_>" [200,200] 200)
+| MULT "name" "name" "name"                   ("m<_, _><_>" [200,200,200] 200)
+| UNIT "name"                                 ("u<_>" [200] 200)
+
+find_theorems "_::monoid"
 
 lemma fresh_symm:
   assumes "atom (a::name) \<sharp> (b::name)"
@@ -46,7 +48,7 @@ lemma permute_flip:
 by (metis flip_eqvt permute_eqvt)
 
 lemma tens_eq_eqvt[eqvt]: "s \<approx> t \<Longrightarrow> \<pi> \<bullet> s \<approx> \<pi> \<bullet> t"
-by (rule tens_eq.induct [of s t],auto simp:permute_flip)
+by(rule tens_eq.induct [of s t],auto simp:permute_flip)
 
 
 (*nominal_inductive tens_eq
@@ -109,12 +111,17 @@ setup {* FreshRules.setup *}
 text {* A fairly crude first approximation of a tactic that solves most single proof steps *}
 
 ML {*
+
+val s = Simplifier.add_simp;
+val sp = Splitter.add_split;
+*}
+
+ML {*
   (* qstep_tac -- a tactic for solving fairly trivial tensor equations *)
   fun qstep_tac ctxt =
     let
       val gen_ctxt =
-        ctxt
-         |> Simplifier.map_simpset (
+        ctxt |> (
               fold Splitter.add_split @{thms prod.splits} #>
               fold Simplifier.add_simp @{thms split_def tens_subs newfresh} #>
               fold Simplifier.add_simp (FreshRules.get ctxt))
@@ -129,7 +136,7 @@ ML {*
          ) 1 ORELSE
          (* deal with AC equations, using blast *)
          blast_tac blast_ctxt 1 ORELSE
-         (* burrow down to differig sub-expression using "rule", then hit with auto *)
+         (* burrow down to differring sub-expression using "rule", then hit with auto *)
          REPEAT((rtac @{thm tens_pr_sub} 1 ORELSE rtac @{thm tens_bnd_sub} 1)
                 THEN TRY(auto_tac gen_ctxt))
        )
