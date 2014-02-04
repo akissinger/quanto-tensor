@@ -1,8 +1,6 @@
 theory NominalMultigraph
-imports "../nominal2/Nominal/Nominal2"
+imports "NomUtil"
 begin
-
-atom_decl name
 
 class nmts =
 fixes prod :: "('a::pt) \<Rightarrow> 'a \<Rightarrow> 'a" (infixr "\<cdot>" 72)
@@ -16,7 +14,7 @@ assumes supp_fin: "finite (supp (x::'a))"
     and bnd_fresh: "(atom a) \<sharp> (\<nu> a . x)"
     and prod_assoc: "(x \<cdot> y) \<cdot> z = x \<cdot> y \<cdot> z"
     and prod_unit: "x \<cdot> \<one> = x"
-    and prod_comm: "x \<cdot> y = y \<cdot> x"
+    and prod_comm[intro]: "x \<cdot> y = y \<cdot> x"
     and bnd_prod: "(atom a) \<sharp> y \<Longrightarrow> \<nu> a . x \<cdot> y = (\<nu> a . x) \<cdot> y"
     and bnd_bnd: "\<nu> a . \<nu> b . x = \<nu> b . \<nu> a . x"
     and id_refl: "\<delta>[a,a] = \<one>"
@@ -24,9 +22,17 @@ assumes supp_fin: "finite (supp (x::'a))"
     and id_elim: "(atom b) \<sharp> a \<Longrightarrow> \<nu> b . \<delta>[a,b] = \<one>"
     and id_swp[intro]: "\<delta>[a,b] \<cdot> x = \<delta>[a,b] \<cdot> ((a \<leftrightarrow> b) \<bullet> x)"
 
-lemma id_symm: "\<delta>[a,b] = \<delta>[b,a]"
+lemma id_swp2[intro]: "x \<cdot> \<delta>[a,b] = ((a \<leftrightarrow> b) \<bullet> x) \<cdot> \<delta>[a,b]"
+by (metis id_swp prod_comm)
+
+lemma id_symm[intro]: "\<delta>[a,b] = \<delta>[b,a]"
 proof -
 have "\<delta>[a,b] = \<delta>[a,b] \<cdot> \<delta>[a,b]" by simp
 also have "... = \<delta>[a,b] \<cdot> ((a \<leftrightarrow> b) \<bullet> \<delta>[a,b])" by rule
+also have "... = \<delta>[a,b] \<cdot> \<delta>[b,a]" by simp
+also have "... = ((b \<leftrightarrow> a) \<bullet> \<delta>[a,b]) \<cdot> \<delta>[b,a]" by rule
+also have "... = \<delta>[b,a]" by simp
+finally show ?thesis .
+qed
 
 end
