@@ -1,8 +1,6 @@
 theory TensorMonoid
-imports "../nominal2/Nominal/Nominal2"
+imports "NomUtil"
 begin
-
-atom_decl name
 
 nominal_datatype monoid =
   COMBINE "monoid" "monoid"                   (infixr "\<cdot>" 150)
@@ -13,13 +11,6 @@ nominal_datatype monoid =
 
 find_theorems "_::monoid"
 
-lemma fresh_symm:
-  assumes "atom (a::name) \<sharp> (b::name)"
-  shows "atom b \<sharp> a"
-using assms
-by simp
-
-theorems newfresh = fresh_Nil fresh_Pair fresh_Cons swap_fresh_fresh flip_def fresh_append
 
 inductive
   tens_eq :: "monoid \<Rightarrow> monoid \<Rightarrow> bool" (infix "\<approx>" 50)
@@ -42,10 +33,6 @@ where
     "bnd x . u<x> \<cdot> m<x, a><b> \<approx> id<a><b>"
 
 find_theorems "?\<pi> \<bullet> (?a \<leftrightarrow> ?b) \<bullet> ?sa"
-
-lemma permute_flip:
-  "\<pi> \<bullet> (a \<leftrightarrow> b) \<bullet> s = (\<pi> \<bullet> a \<leftrightarrow> \<pi> \<bullet> b) \<bullet> \<pi> \<bullet> s"
-by (metis flip_eqvt permute_eqvt)
 
 lemma tens_eq_eqvt[eqvt]: "s \<approx> t \<Longrightarrow> \<pi> \<bullet> s \<approx> \<pi> \<bullet> t"
 by(rule tens_eq.induct [of s t],auto simp:permute_flip)
