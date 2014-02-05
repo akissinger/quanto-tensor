@@ -10,9 +10,6 @@ lemma fresh_symm:
 using assms
 by simp
 
-theorems newfresh = fresh_Nil fresh_Pair fresh_Cons swap_fresh_fresh flip_def fresh_append
-theorems supp_args = supports_def permute_fun_def fresh_def[symmetric] swap_fresh_fresh finite_supp
-
 
 lemma permute_flip:
   "\<pi> \<bullet> (a \<leftrightarrow> b) \<bullet> s = (\<pi> \<bullet> a \<leftrightarrow> \<pi> \<bullet> b) \<bullet> \<pi> \<bullet> s"
@@ -32,5 +29,8 @@ structure FreshRules = Named_Thms(
 *}
 
 setup {* FreshRules.setup *}
+
+theorems newfresh = fresh_Nil fresh_Pair fresh_symm fresh_Cons swap_fresh_fresh flip_def fresh_append flip_fresh_fresh
+theorems supp_args = supports_def permute_fun_def fresh_def[symmetric] swap_fresh_fresh finite_supp
 
 end
