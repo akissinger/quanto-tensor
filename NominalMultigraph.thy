@@ -123,6 +123,30 @@ also have "... = (a \<leftrightarrow> b) \<bullet> x" by simp
 finally show ?thesis .
 qed
 
+lemma id_id:
+assumes "atom c \<sharp> (a,b)"
+shows   "\<delta>[a,b] \<cdot> \<delta>[b,c] = \<delta>[a,b] \<cdot> \<delta>[a,c]"
+apply(subst id_swp, simp)
+by (metis flip_at_base_simps(3) flip_at_simps flip_at_simps id_idem id_refl prod_unit)
+
+lemma id_trans:
+assumes [fr]: "atom c \<sharp> (a,b)"
+assumes [fr]: "atom a \<sharp> b"
+shows "\<nu> b . \<delta>[a,b] \<cdot> \<delta>[b,c] = \<delta>[a,c]"
+apply(simp add:fr id_id)
+by (metis fr bnd_prod fresh_Pair fresh_symm id_elim id_fr prod_comm prod_unit)
+
+theorem rnm_id:
+assumes [fr]: "atom c \<sharp> (a,b)"
+assumes [fr]: "atom a \<sharp> b"
+shows "[b >> a] \<delta>[b,c] = \<delta>[a,c]"
+by (simp add:fr id_trans rnm_def)
+
+theorem rnm_bind:
+assumes [fr]: "(atom c) \<sharp> (a,b)"
+shows "[b >> a](\<nu> c . x) = \<nu> c . [b >> a]x"
+by (auto simp:bnd_bnd fr bnd_prod1 rnm_def)
+
 theorem rnm_prod:
 assumes [fr]: "(atom b) \<sharp> a"
 shows "[b >> a](x \<cdot> y) = [b >> a]x \<cdot> [b >> a]y"
@@ -133,15 +157,14 @@ have [fr]: "atom c \<sharp> \<nu> b . \<delta>[a, b] \<cdot> y"
 by (metis fr bnd_fr1 fresh_Pair prod_fresh)
 have [fr]:"atom b \<sharp> (c, (b \<leftrightarrow> c) \<bullet> y)"
 by (metis fr flip_at_simps(2) fresh_Pair fresh_at_base_permute_iff fresh_symm)
-have delta:"\<delta>[a,b] \<cdot> \<delta>[b,c] = \<delta>[a,b] \<cdot> \<delta>[a,c]"
-by(subst id_swp, auto simp add:fr newfresh)
 
 have "[b >> a](x \<cdot> y) = \<nu> b . \<delta>[a,b] \<cdot> x \<cdot> y" by (simp add:rnm_def)
 also have "... = \<nu> b . \<delta>[a,b] \<cdot> x \<cdot> [c >> b]((b \<leftrightarrow> c) \<bullet> y)" by (metis fr rnm_swap permute_flip_cancel)
 also have "... = \<nu> b . \<delta>[a,b] \<cdot> x \<cdot> (\<nu> c . \<delta>[b,c] \<cdot> (b \<leftrightarrow> c) \<bullet> y)" by (simp add:rnm_def)
 also have "... = \<nu> b . \<nu> c . \<delta>[a,b] \<cdot> x \<cdot> \<delta>[b,c] \<cdot> (b \<leftrightarrow> c) \<bullet> y" by (metis fr fresh_Pair bnd_prod prod_comm)
 also have "... = \<nu> b . \<nu> c . \<delta>[a,b] \<cdot> \<delta>[b,c] \<cdot> x \<cdot> (b \<leftrightarrow> c) \<bullet> y" by (metis prod_comm prod_assoc)
-also have "... = \<nu> b . \<nu> c . \<delta>[a,b] \<cdot> \<delta>[a,c] \<cdot> x \<cdot> (b \<leftrightarrow> c) \<bullet> y" by (metis delta prod_assoc)
+also have "... = \<nu> b . \<nu> c . (\<delta>[a,b] \<cdot> \<delta>[b,c]) \<cdot> x \<cdot> (b \<leftrightarrow> c) \<bullet> y" by simp
+also have "... = \<nu> b . \<nu> c . \<delta>[a,b] \<cdot> \<delta>[a,c] \<cdot> x \<cdot> (b \<leftrightarrow> c) \<bullet> y" by (auto simp:fr id_id)
 also have "... = \<nu> b . \<delta>[a,b] \<cdot> (\<nu> c . \<delta>[a,c] \<cdot> x \<cdot> (b \<leftrightarrow> c) \<bullet> y)" by (metis fr bnd_prod prod_comm)
 also have "... = \<nu> b . \<delta>[a,b] \<cdot> (\<nu> c . x \<cdot> \<delta>[a,c] \<cdot> (b \<leftrightarrow> c) \<bullet> y)" by (metis prod_assoc prod_comm)
 also have "... = \<nu> b . (\<delta>[a,b] \<cdot> x) \<cdot> (\<nu> c . \<delta>[a,c] \<cdot> (b \<leftrightarrow> c) \<bullet> y)" by (auto simp:fr bnd_prod1)
